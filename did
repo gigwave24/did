@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Real-Time Avatar with D-ID + n8n</title>
+</head>
+<body>
+
+<h2>Start Real-Time Avatar</h2>
+
+<button onclick="startAvatar()">Start Avatar</button>
+
+<br><br>
+
+<iframe id="avatarPlayer" width="400" height="400"></iframe>
+
+<script>
+async function startAvatar() {
+    // 1️⃣ Call your n8n webhook to get streamId
+    const response = await fetch('https://gigwave24.app.n8n.cloud/webhook/DID', {
+        method: 'POST'
+    });
+
+    const data = await response.json();
+    const streamId = data.streamId;
+
+    // 2️⃣ Set iframe to show the avatar video
+    document.getElementById('avatarPlayer').src = `https://studio.d-id.com/player/${streamId}`;
+
+    // 3️⃣ Open WebSocket to send text to the avatar (real-time talking)
+    const socket = new WebSocket(`wss://api.d-id.com/v1/streams/${streamId}`);
+
+    socket.onopen = () => {
+        console.log("Connected to D-ID Streaming");
+
+        // Send message to avatar to make it talk
+        socket.send(JSON.stringify({
+            type: "script",
+            script: {
+                type: "text",
+                input: "Hello! This is a real-time avatar."
+            }
+        }));
+    };
+}
+</script>
+
+</body>
+</html>
+
